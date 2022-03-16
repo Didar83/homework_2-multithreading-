@@ -29,6 +29,7 @@ dependencies {
     compileOnly "com.google.code.findbugs:jsr305:$fingBugsVersion"
     implementation "org.apache.commons:commons-lang3:$commonsLangVersion"
     implementation "ch.qos.logback:logback-classic:$logbackVersion"
+    implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
     testImplementation "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
