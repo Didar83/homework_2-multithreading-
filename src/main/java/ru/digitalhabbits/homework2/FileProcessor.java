@@ -35,6 +35,7 @@ public class FileProcessor {
         fileWriterThread.start();
 
         var executorService = Executors.newFixedThreadPool(CHUNK_SIZE);
+        StringBuilder stringBuilder = new StringBuilder();
         try (final Scanner scanner = new Scanner(file, defaultCharset())) {
             while (scanner.hasNext()) {
                 // TODO: NotImplemented: вычитываем CHUNK_SIZE строк для параллельной обработки
@@ -46,7 +47,6 @@ public class FileProcessor {
                     }
                 }
                 // TODO: NotImplemented: обрабатывать строку с помощью LineProcessor. Каждый поток обрабатывает свою строку.
-                StringBuilder stringBuilder = new StringBuilder();
                 while (lineList.size() > 0) {
                     Future<Pair<String, Integer>> calculatedLine = executorService.submit(new CalculateAndReplaceJob(lineList));
                     convertedToPairList.add(calculatedLine.get());
