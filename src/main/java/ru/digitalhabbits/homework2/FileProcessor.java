@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Scanner;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -38,22 +39,22 @@ public class FileProcessor {
             while (scanner.hasNext()) {
                 // TODO: NotImplemented: вычитываем CHUNK_SIZE строк для параллельной обработки
                 var lineList = new LinkedList<String>();
-                var convertedToPairList = new ArrayList<Pair<String, Integer>>(CHUNK_SIZE);
+                var convertedToPairList = new LinkedList<Pair<String, Integer>>();
                 for (int i = 0; i < CHUNK_SIZE; i++) {
                     if (scanner.hasNext()) {
                         lineList.addLast(scanner.nextLine());
                     }
                 }
                 // TODO: NotImplemented: обрабатывать строку с помощью LineProcessor. Каждый поток обрабатывает свою строку.
+                StringBuilder stringBuilder = new StringBuilder();
                 while (lineList.size() > 0) {
                     Future<Pair<String, Integer>> calculatedLine = executorService.submit(new CalculateAndReplaceJob(lineList));
                     convertedToPairList.add(calculatedLine.get());
-                    Pair<String, Integer> pairToWrite = convertedToPairList.remove(0);
-                    String content = IOUtils.toString(new FileInputStream(file), defaultCharset());
-                    content = content.replaceAll(pairToWrite.getLeft(), pairToWrite.getLeft()) + " " + pairToWrite.getRight();
-                    IOUtils.write(content, new FileOutputStream(resultFile), defaultCharset());
+                    Pair<String, Integer> pairToWrite = convertedToPairList.removeLast();
+                    stringBuilder.append(pairToWrite.getLeft() + " " + pairToWrite.getRight()+System.lineSeparator());
                 }
                 // TODO: NotImplemented: добавить обработанные данные в результирующий файл
+                IOUtils.write(stringBuilder.toString(), new FileOutputStream(resultFile), defaultCharset());
 
             }
         } catch (ExecutionException e) {
