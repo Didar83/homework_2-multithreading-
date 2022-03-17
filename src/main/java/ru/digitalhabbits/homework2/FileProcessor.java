@@ -12,10 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Scanner;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 import static java.lang.Runtime.getRuntime;
 import static java.nio.charset.Charset.defaultCharset;
@@ -47,12 +44,7 @@ public class FileProcessor {
                     }
                 }
                 // TODO: NotImplemented: обрабатывать строку с помощью LineProcessor. Каждый поток обрабатывает свою строку.
-                while (lineList.size() > 0) {
-                    Future<Pair<String, Integer>> calculatedLine = executorService.submit(new CalculateAndReplaceJob(lineList));
-                    convertedToPairList.add(calculatedLine.get());
-                    Pair<String, Integer> pairToWrite = convertedToPairList.removeLast();
-                    stringBuilder.append(pairToWrite.getLeft() + " " + pairToWrite.getRight()+System.lineSeparator());
-                }
+                transferLineToPair(lineList, stringBuilder, executorService, convertedToPairList);
                 // TODO: NotImplemented: добавить обработанные данные в результирующий файл
                 IOUtils.write(stringBuilder.toString(), new FileOutputStream(resultFile), defaultCharset());
 
@@ -68,6 +60,18 @@ public class FileProcessor {
         // TODO: NotImplemented: остановить поток writerThread
         executorService.shutdown();
         logger.info("Finish main thread {}", Thread.currentThread().getName());
+    }
+
+    private void transferLineToPair(LinkedList<String> lineList,
+                                    StringBuilder stringBuilder,
+                                    ExecutorService executorService,
+                                    LinkedList<Pair<String, Integer>> convertedToPairList) throws ExecutionException, InterruptedException {
+        while (lineList.size() > 0) {
+            Future<Pair<String, Integer>> calculatedLine = executorService.submit(new CalculateAndReplaceJob(lineList));
+            convertedToPairList.add(calculatedLine.get());
+            Pair<String, Integer> pairToWrite = convertedToPairList.removeLast();
+            stringBuilder.append(pairToWrite.getLeft() + " " + pairToWrite.getRight()+System.lineSeparator());
+        }
     }
 
     private void checkFileExists(@Nonnull String fileName) {
